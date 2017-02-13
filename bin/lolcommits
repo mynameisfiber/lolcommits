@@ -71,6 +71,7 @@ class App
   end
 
   on('--test', 'run in test mode')
+  on('--manual', 'run in manual mode')
   on('--debug', 'show debugging info')
   on('--show-config', 'show configuration file')
   on('--devices', 'list available capture devices (mac only)')
@@ -93,8 +94,9 @@ class App
   on('-w', '--delay {seconds}', 'delay before taking a snapshot')
   on('--stealth', 'capture image in stealth mode (no output)')
   on('--fork', 'fork capturing process to the background')
-  on('-s', '--sha {string}', 'pass commit sha manually (--test mode only)')
-  on('-m', '--msg {string}', 'pass commit message manually (--test mode only)')
+  on('-s', '--sha {string}', 'pass commit sha manually (--test or --manual mode only)')
+  on('-m', '--msg {string}', 'pass commit message manually (--test or --manual mode only)')
+  on('-r', '--repo {string}', 'pass repo name manually (--test or --manual mode only)')
 
   #
   # No options specified, help the user out
@@ -113,6 +115,8 @@ class App
   def self.configuration
     if options[:test]
       Configuration.new(loldir: Configuration.loldir_for('test'))
+    elsif options[:manual]
+      Configuration.new(loldir: Configuration.loldir_for(options[:repo]))
     else
       Configuration.new
     end
@@ -156,7 +160,7 @@ class App
 
     process_runner = ProcessRunner.new(configuration)
     process_runner.fork_me?(should_we_fork) do
-      if options[:test]
+      if options[:test] or options[:manual]
         info '*** Capturing in test mode.'
         capture_options.merge!(test_capture_options)
       end
